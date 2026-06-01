@@ -2129,7 +2129,11 @@ const COMPONENTS = {
         negative: '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="6" fill="currentColor" style="color:var(--naowee-color-feedback-fill-negative-loud,#c4031d)"/><path d="M3.75 6h4.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>'
       };
       var badge = '<span class="naowee-helper__badge">' + badgeIcons[s.color] + '</span>';
-      return '<span class="' + cls.join(' ') + '">' + badge + s.text + '</span>';
+      /* El texto DEBE ir dentro de .naowee-helper__text — ahí vive el color
+         base (gris). Sin ese wrapper hereda el texto claro del shell oscuro
+         del playground y queda invisible sobre el fondo blanco de la preview.
+         Misma estructura que usa el textfield (que se ve correcto). */
+      return '<span class="' + cls.join(' ') + '"><span class="naowee-helper__text">' + badge + '<span>' + s.text + '</span></span></span>';
     }
   },
 
