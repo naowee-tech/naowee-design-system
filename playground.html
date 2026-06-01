@@ -11,6 +11,10 @@
 <!-- JSZip — empaqueta los SVGs del icon pack en un .zip descargable
      (consumo: ~95KB, sólo se usa al hacer click en "Descargar pack SVG"). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<!-- Set oficial de iconos extraído de Figma "02 - Iconography [NT]" (142 iconos,
+     9 categorías). Define window.NAOWEE_FIGMA_ICONS. Carga síncrona ANTES del
+     engine inline para que renderIcons() y downloadIconPack() lo encuentren. -->
+<script src="naowee-icons-data.js"></script>
 <style>
 /* ── PLAYGROUND SHELL (Vercel/Linear dark) ─────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -555,7 +559,7 @@ var ICO = {
 /* ── Foundation Configs ───────────────────────────────── */
 const FOUNDATIONS = [
   { id:'colors', label:'Colors', desc:'Paletas de color core + aliases semanticos' },
-  { id:'icons', label:'Icons', desc:'Libreria de iconos stroke-based (Figma Iconography NT)' },
+  { id:'icons', label:'Icons', desc:'Libreria oficial — 142 iconos del archivo Figma 02 — Iconography [NT] · descargables como pack SVG para icomoon' },
   { id:'typography', label:'Typography', desc:'Font sizes, weights, line heights' },
   { id:'spacing', label:'Spacing', desc:'Padding y gap scales (17 steps)' },
   { id:'sizing', label:'Sizing', desc:'Action, input, icon sizes' },
@@ -3276,41 +3280,62 @@ function renderColors() {
   return html;
 }
 
+/* Render de un icono del set oficial de Figma (window.NAOWEE_FIGMA_ICONS).
+   Todos son fill-based outlined paths (viewBox 24) → el wrapper aplica
+   fill:currentColor y cada path lo hereda (los fills negros se removieron
+   en la extracción). */
+function figmaIcon(name, size) {
+  var ICONS = window.NAOWEE_FIGMA_ICONS || {};
+  var ic = ICONS[name];
+  if (!ic) return '';
+  var s = size || 24;
+  return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' + ic.svg + '</svg>';
+}
+
 function renderIcons() {
-  var cats = {};
-  Object.keys(NAOWEE_ICONS).forEach(function(name) {
-    var icon = NAOWEE_ICONS[name];
-    if (!cats[icon.cat]) cats[icon.cat] = [];
-    cats[icon.cat].push(name);
+  var ICONS = window.NAOWEE_FIGMA_ICONS;
+  if (!ICONS) {
+    return '<div style="padding:24px;color:#ef4444;font-size:13px">No se cargó <code>naowee-icons-data.js</code>. Verificá que el archivo esté junto a playground.html.</div>';
+  }
+  var ORDER = window.NAOWEE_FIGMA_ICONS_ORDER || Object.keys(ICONS);
+
+  /* Agrupar por categoría preservando el orden de Figma */
+  var cats = {}; var catOrder = [];
+  ORDER.forEach(function(name) {
+    var cat = ICONS[name].cat;
+    if (!cats[cat]) { cats[cat] = []; catOrder.push(cat); }
+    cats[cat].push(name);
   });
-  var html = '<div style="margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' +
-    '<span style="font-size:12px;color:#646587">Iconos: <strong style="color:#282834">' + Object.keys(NAOWEE_ICONS).length + '</strong> | Categorias: <strong style="color:#282834">' + Object.keys(cats).length + '</strong></span>' +
+
+  var html = '<div style="margin-bottom:20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">' +
+    '<span style="font-size:12px;color:#646587">Iconos: <strong style="color:#282834">' + ORDER.length + '</strong> | Categorias: <strong style="color:#282834">' + catOrder.length + '</strong> · <span style="color:#9C9EBF">Fuente: Figma 02 — Iconography [NT]</span></span>' +
     '<button onclick="downloadIconPack(this)" class="pg-icon-download-btn" title="Descargar todos los iconos como ZIP de SVGs (para importar en icomoon.io)">' +
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
       '<span>Descargar pack SVG</span>' +
     '</button>' +
     '</div>';
-  Object.keys(cats).forEach(function(cat) {
-    html += '<h3>' + cat + '</h3><div class="pg-icon-grid">';
+  catOrder.forEach(function(cat) {
+    html += '<h3>' + cat + ' <span style="color:#71717a;font-weight:500;font-size:13px">(' + cats[cat].length + ')</span></h3><div class="pg-icon-grid">';
     cats[cat].forEach(function(name) {
-      html += '<div class="pg-icon-card" title="' + name + '\nTags: ' + NAOWEE_ICONS[name].tags + '" onclick="copyIconName(\'' + name + '\')">' +
-        '<div class="pg-icon-preview">' + naoIcon(name, 24) + '</div>' +
+      html += '<div class="pg-icon-card" title="' + name + '\nTags: ' + ICONS[name].tags + '\n(click para copiar el nombre)" onclick="copyIconName(\'' + name + '\')">' +
+        '<div class="pg-icon-preview">' + figmaIcon(name, 24) + '</div>' +
         '<span class="pg-icon-name">' + name + '</span></div>';
     });
     html += '</div>';
   });
   html += '<h3>Sizes</h3><div style="display:flex;gap:24px;align-items:flex-end">';
+  var sizeRef = ICONS['search'] ? 'search' : ORDER[0];
   [12,16,20,24,32,48].forEach(function(s) {
-    html += '<div style="text-align:center">' + naoIcon('home', s) + '<div style="font-size:10px;color:#9C9EBF;margin-top:4px">' + s + 'px</div></div>';
+    html += '<div style="text-align:center">' + figmaIcon(sizeRef, s) + '<div style="font-size:10px;color:#9C9EBF;margin-top:4px">' + s + 'px</div></div>';
   });
   html += '</div>';
   return html;
 }
 function copyIconName(name) {
-  navigator.clipboard.writeText("naoIcon('" + name + "')");
+  navigator.clipboard.writeText(name);
   var title = document.querySelector('.pg-topbar-title');
   var prev = title.textContent;
-  title.textContent = 'Copied: ' + name;
+  title.textContent = 'Copiado: ' + name;
   setTimeout(function(){ title.textContent = prev; }, 1500);
 }
 
@@ -3338,54 +3363,58 @@ function downloadIconPack(btn) {
     if (lbl) lbl.textContent = 'Generando…';
   }
 
+  var ICONS = window.NAOWEE_FIGMA_ICONS;
+  if (!ICONS) {
+    alert('No se cargó el set de iconos (naowee-icons-data.js).');
+    if (btn) { btn.disabled = false; var l0 = btn.querySelector('span'); if (l0) l0.textContent = prevLbl || 'Descargar pack SVG'; }
+    return;
+  }
+  var ORDER = window.NAOWEE_FIGMA_ICONS_ORDER || Object.keys(ICONS);
   var zip = new JSZip();
 
-  Object.keys(NAOWEE_ICONS).forEach(function(name) {
-    var icon = NAOWEE_ICONS[name];
-    var vb = icon.vb || 24;
-    var svg;
-    if (icon.filled) {
-      svg = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + vb + ' ' + vb + '" fill="currentColor">' + icon.d + '</svg>';
-    } else {
-      svg = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + vb + ' ' + vb + '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + icon.d + '</svg>';
-    }
-    var folder = (icon.cat || 'misc').toLowerCase().replace(/\s+/g, '-');
+  /* Cada icono es un SVG standalone fill-based (outlined paths con
+     currentColor). icomoon los importa como glyphs directamente —
+     no necesita convertir stroke a outline porque ya vienen outlined. */
+  ORDER.forEach(function(name) {
+    var icon = ICONS[name];
+    var svg = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">' + icon.svg + '</svg>';
+    var folder = (icon.cat || 'misc').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     zip.file(folder + '/' + name + '.svg', svg);
   });
 
-  var total = Object.keys(NAOWEE_ICONS).length;
-  var cats = {};
-  Object.keys(NAOWEE_ICONS).forEach(function(n){ cats[NAOWEE_ICONS[n].cat] = (cats[NAOWEE_ICONS[n].cat] || 0) + 1; });
-  var catsList = Object.keys(cats).map(function(c){ return '  • ' + c + ' (' + cats[c] + ')'; }).join('\n');
+  var total = ORDER.length;
+  var cats = {}; var catOrder = [];
+  ORDER.forEach(function(n){ var c = ICONS[n].cat; if (!(c in cats)) { cats[c] = 0; catOrder.push(c); } cats[c]++; });
+  var catsList = catOrder.map(function(c){ return '  • ' + c + ' (' + cats[c] + ')'; }).join('\n');
 
   var readme = [
     'NAOWEE DESIGN SYSTEM — Pack de iconos',
     '======================================',
     '',
     'Total: ' + total + ' iconos',
+    'Fuente: Figma "02 - Iconography [NT]"',
     'Categorias:',
     catsList,
     '',
-    'Formato: SVG standalone con viewBox + currentColor.',
+    'Formato: SVG standalone, fill-based (outlined paths), currentColor, viewBox 24x24.',
     '',
     'COMO IMPORTAR A ICOMOON',
     '------------------------',
     '1. Ir a https://icomoon.io/app',
     '2. Click "Import Icons" (esquina superior izquierda)',
-    '3. Seleccionar todos los .svg de las subcarpetas',
-    '4. icomoon convierte stroke-paths a outlines automaticamente',
-    '5. Seleccionar los iconos importados → "Generate Font"',
-    '6. Descargar la icon font + CSS y subir a la web app',
+    '3. Seleccionar todos los .svg de las subcarpetas (o arrastrar el ZIP descomprimido)',
+    '4. Los iconos ya vienen outlined (fill-based) → icomoon los toma directo como glyphs',
+    '5. Seleccionar todos los iconos importados → "Generate Font" (abajo a la derecha)',
+    '6. Descargar la icon font + CSS y subirla a la web app',
     '',
     'NOTAS',
     '-----',
-    '- Todos los iconos usan currentColor → recolorables via CSS',
-    '- Stroke-width default: 1.5px',
-    '- Stroke-linecap: round, stroke-linejoin: round',
-    '- viewBox: 24x24 (stroke icons) | 16x16 (filled feedback icons)',
-    '- Los archivos vienen organizados por categoria en subcarpetas',
+    '- Todos los iconos usan currentColor → recolorables via CSS (color: ...)',
+    '- viewBox: 0 0 24 24 (tamaño canonico xsmall del set de Figma)',
+    '- Son outlined fills, NO strokes → no requieren conversion en icomoon',
+    '- Organizados por categoria en subcarpetas (01 UI, 02 Feedback, etc.)',
+    '- Nombres en kebab-case (ej: chevron-right.svg, qr-code.svg)',
     '',
     'Generado desde el playground del Design System Naowee.',
     'Fecha: ' + (new Date()).toISOString().slice(0, 10)
