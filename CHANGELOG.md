@@ -6,6 +6,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Vers
 
 ---
 
+## [1.9.0] — 2026-06-01
+
+### Added — Set de iconos oficial desde Figma (142 iconos)
+Extracción completa del archivo Figma **"02 - Iconography [NT]"** vía REST API, en su tamaño canónico (xsmall / 24px). Reemplaza la librería aproximada anterior en la sección **Icons** del playground por el set real de diseño.
+
+- **`naowee-icons-data.js`** (nuevo) — define `window.NAOWEE_FIGMA_ICONS` con los 142 iconos normalizados: fill-based outlined paths, `currentColor`, `viewBox 0 0 24 24`, decimales redondeados a 2. Auto-generado, regenerable con el pipeline de extracción.
+- **9 categorías**: UI (18), Feedback (4), Control & Action (41), Payments & Finance (21), Shipping (13), People (6), Comms (9), Navigation (17), Others (13).
+- **Botón "Descargar pack SVG"** en la sección Icons — empaqueta los 142 SVGs standalone organizados por categoría en subcarpetas + `README.txt` con instrucciones para importar a [icomoon.io](https://icomoon.io). Usa JSZip (CDN, lazy).
+- Click en cualquier icono copia su nombre en kebab-case (ej: `chevron-right`, `qr-code`).
+
+> El objeto `NAOWEE_ICONS` legacy se mantiene intacto — lo consumen 44 renders de componentes del playground.
+
+---
+
 ## [1.8.0] — 2026-04-29
 
 ### Added — Wizard Form Recipe
